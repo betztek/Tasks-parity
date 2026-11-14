@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "tasks_version": "8.6.0",
+  "tasks_commit": "d37646b67cae0329234e73cbd3478661da2383af",
+  "cases": [
+    {
+      "id": "roundtrip-due-scheduled-priority",
+      "description": "Parse a task with due, scheduled and priority written in non-canonical order, and re-serialise it. Shows the field order Tasks writes.",
+      "operation": "serialize-roundtrip",
+      "today": "2026-11-14",
+      "settings": {
+        "globalFilter": "#task",
+        "removeGlobalFilter": false,
+        "taskFormat": "tasksPluginEmoji",
+        "recurrenceOnNextLine": false,
+        "removeScheduledDateOnRecurrence": false,
+        "setCreatedDate": false,
+        "setDoneDate": true,
+        "setCancelledDate": true
+      },
+      "input": {
+        "lines": [
+          "- [ ] #task Submit expense report 📅 2026-11-20 ⏳ 2026-11-16 ⏫"
+        ]
+      },
+      "expected": {
+        "lines": [
+          "- [ ] #task Submit expense report ⏫ ⏳ 2026-11-16 📅 2026-11-20"
+        ],
+        "tasks": [
+          {
+            "indentation": "",
+            "listMarker": "-",
+            "status": {
+              "symbol": " ",
+              "name": "Todo",
+              "type": "TODO",
+              "nextStatusSymbol": "x"
+            },
+            "description": "#task Submit expense report",
+            "priority": "high",
+            "dates": {
+              "created": null,
+              "start": null,
+              "scheduled": "2026-11-16",
+              "due": "2026-11-20",
+              "done": null,
+              "cancelled": null
+            },
+            "scheduledDateIsInferred": false,
+            "recurrence": null,
+            "onCompletion": "",
+            "id": "",
+            "dependsOn": [],
+            "tags": [],
+            "blockLink": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "toggle-done-non-recurring",
+      "description": "Toggle a non-recurring task to done: status becomes x and the done date is today.",
+      "operation": "toggle",
+      "today": "2026-11-14",
+      "settings": {
+        "globalFilter": "#task",
+        "removeGlobalFilter": false,
+        "taskFormat": "tasksPluginEmoji",
+        "recurrenceOnNextLine": false,
+        "removeScheduledDateOnRecurrence": false,
+        "setCreatedDate": false,
+        "setDoneDate": true,
+        "setCancelledDate": true
+      },
+      "input": {
+        "lines": [
+          "- [ ] #task Call the dentist 📅 2026-11-14"
+        ]
+      },
+      "expected": {
+        "lines": [
+          "- [x] #task Call the dentist 📅 2026-11-14 ✅ 2026-11-14"
+        ],
+        "tasks": [
+          {
+            "indentation": "",
+            "listMarker": "-",
+            "status": {
+              "symbol": "x",
+              "name": "Done",
+              "type": "DONE",
+              "nextStatusSymbol": " "
+            },
+            "description": "#task Call the dentist",
+            "priority": "none",
+            "dates": {
+              "created": null,
+              "start": null,
+              "scheduled": null,
+              "due": "2026-11-14",
+              "done": "2026-11-14",
+              "cancelled": null
+            },
+            "scheduledDateIsInferred": false,
+            "recurrence": null,
+            "onCompletion": "",
+            "id": "",
+            "dependsOn": [],
+            "tags": [],
+            "blockLink": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "toggle-done-recurring-weekly-global-filter",
+      "description": "Toggle a weekly recurring task carrying the global filter tag. The next occurrence must keep #task (VaultMate issue #63 drops it when completing from the widget).",
+      "operation": "toggle",
+      "today": "2026-11-14",
+      "settings": {
+        "globalFilter": "#task",
+        "removeGlobalFilter": false,
+        "taskFormat": "tasksPluginEmoji",
+        "recurrenceOnNextLine": false,
+        "removeScheduledDateOnRecurrence": false,
+        "setCreatedDate": false,
+        "setDoneDate": true,
+        "setCancelledDate": true
+      },
+      "input": {
+        "lines": [
+          "- [ ] #task Water the plants 🔁 every week 📅 2026-11-14"
+        ]
+      },
+      "links": [
+        "https://github.com/Vankir/vaultmate/issues/63"
+      ],
+      "expected": {
+        "lines": [
+          "- [ ] #task Water the plants 🔁 every week 📅 2026-11-21",
+          "- [x] #task Water the plants 🔁 every week 📅 2026-11-14 ✅ 2026-11-14"
+        ],
+        "tasks": [
+          {
+            "indentation": "",
+            "listMarker": "-",
+            "status": {
+              "symbol": " ",
+              "name": "Todo",
+              "type": "TODO",
+              "nextStatusSymbol": "x"
+            },
+            "description": "#task Water the plants",
+            "priority": "none",
+            "dates": {
+              "created": null,
+              "start": null,
+              "scheduled": null,
+              "due": "2026-11-21",
+              "done": null,
+              "cancelled": null
+            },
+            "scheduledDateIsInferred": false,
+            "recurrence": "every week",
+            "onCompletion": "",
+            "id": "",
+            "dependsOn": [],
+            "tags": [],
+            "blockLink": ""
+          },
+          {
+            "indentation": "",
+            "listMarker": "-",
+            "status": {
+              "symbol": "x",
+              "name": "Done",
+              "type": "DONE",
+              "nextStatusSymbol": " "
+            },
+            "description": "#task Water the plants",
+            "priority": "none",
+            "dates": {
+              "created": null,
+              "start": null,
+              "scheduled": null,
+              "due": "2026-11-14",
+              "done": "2026-11-14",
+              "cancelled": null
+            },
+            "scheduledDateIsInferred": false,
+            "recurrence": "every week",
+            "onCompletion": "",
+            "id": "",
+            "dependsOn": [],
+            "tags": [],
+            "blockLink": ""
+          }
+        ]
+      }
+    }
+  ]
+}

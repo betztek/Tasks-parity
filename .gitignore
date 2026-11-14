@@ -150,3 +150,5 @@ vite.config.ts.timestamp-*
 
 # tasks-parity: symlink to vendor/obsidian-tasks/node_modules (created by setup.sh)
 /node_modules
+# tasks-parity: goldens are committed
+!/out/
