@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# tasks-parity: symlink to vendor/obsidian-tasks/node_modules (created by setup.sh)
+/node_modules
