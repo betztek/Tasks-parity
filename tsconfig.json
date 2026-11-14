@@ -1,0 +1,10 @@
+{
+  "extends": "./vendor/obsidian-tasks/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./vendor/obsidian-tasks/src",
+    "noEmit": true,
+    "types": ["vitest/globals", "node"],
+    "lib": ["dom", "es2020"]
+  },
+  "include": ["generator/**/*", "tests/**/*", "vitest.config.ts"]
+}
