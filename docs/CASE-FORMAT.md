@@ -146,6 +146,10 @@ same inputs is byte-identical.
 
 **Primary contract for consumers is `expected.lines`.** Fields are secondary:
 compare only fields VaultMate's model actually has, and say which in the Dart test.
+Known model differences: VaultMate's `description` excludes the global filter and
+all tags (Tasks' includes both); VaultMate stores tags without `#`; VaultMate's
+priority `normal` is Tasks' `none`. Non-task lines are omitted from VaultMate's
+parse result rather than returned as `null`, so align by line.
 
 ## 5. `expected-divergences.json` (lives in the VaultMate fork)
 
@@ -158,8 +162,8 @@ VaultMate's state and changes with VaultMate fixes, not with Tasks.
   "divergences": [
     {
       "id": "toggle-done-recurring-weekly-global-filter",
-      "reason": "Completing from the widget drops the global filter tag on the next occurrence.",
-      "issue": "https://github.com/Vankir/vaultmate/issues/63"
+      "reason": "In-app completion creates no next occurrence (VaultMate recurs only tasks with ⏳) and moves #task after the description.",
+      "issue": "https://github.com/betztek/vaultmate/issues/<n>"
     }
   ]
 }
@@ -170,6 +174,10 @@ VaultMate's state and changes with VaultMate fixes, not with Tasks.
 | `id` | yes | A case id from `parity-cases.json`. |
 | `reason` | yes | One sentence: what VaultMate does differently. |
 | `issue` | yes | Issue or PR URL tracking the fix. Open an issue first if none exists. |
+
+`reason` describes what the **code path the Dart test runs** does (VaultMate's
+in-app path), not the widget. #63 is a widget bug; the Dart suite cannot observe
+it, so don't cite it as the reason for a Dart-side failure.
 
 Consumer rules (strict expected-failure, like pytest `xfail(strict=True)`):
 
@@ -183,3 +191,7 @@ Consumer rules (strict expected-failure, like pytest `xfail(strict=True)`):
 
 The last two rules keep the list honest: it can only shrink when fixes land, and
 it cannot rot.
+
+Cases whose settings VaultMate cannot express (e.g. `setCancelledDate: false`)
+have no separate outcome yet: they are listed as divergences like any other
+failure. See PLAN.md open question 10.

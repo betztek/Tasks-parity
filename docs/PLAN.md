@@ -35,9 +35,32 @@ Exit criteria:
 
 ## P2: Dart consumer test in the VaultMate fork ⬜
 
-Blocked by: the upstream VaultMate PR replacing `DateTime.now()` (~34 calls) with
-`package:clock`, so tests can pin "today". Without it, every date-dependent case
-is untestable.
+Partly blocked by: the upstream VaultMate PR replacing `DateTime.now()` with
+`package:clock`, so tests can pin "today" (fork issue betztek/vaultmate#2). Only
+`toggle` and `set-status` cases depend on it; `parse` and `serialize-roundtrip`
+never read the clock and can be built first. Counts (VaultMate `main` @ a38724f):
+34 calls in `lib/`, 11 in `lib/src/core/tasks`. Two matter for parity: the ➕
+created date of a next occurrence (`task_manager.dart`) and the ✅ done date, which
+is set in the UI layer (`InboxTasksCubit.changeTaskStatus`), not in `TaskManager`.
+
+Tracking issues in the fork: consumer test betztek/vaultmate#3 (holds the
+operation → VaultMate call mapping), golden sync #4, fork CI #5, widget #6.
+
+### VaultMate behaviour seen in code (unverified by tests)
+
+From reading VaultMate `main` @ a38724f. Expect most cases, including all three
+seed cases, to start in `expected-divergences.json`:
+
+- The global filter is stripped on parse and re-appended **after** the
+  description on save (`#task Foo` → `Foo #task`); other tags are moved after it.
+- Field order on save: priority, ➕, ✅, ❌, 📅, 🛫, ⏳, 🔁 (Tasks: priority, 🔁, ➕,
+  🛫, ⏳, 📅, ❌, ✅).
+- In Markdown files every non-space checkbox char parses as done: `[-]` and `[/]`
+  are read as done and written back as `[x]`.
+- Recurrence only when ⏳ is set, computed from ⏳ only; 📅/🛫 dropped from the next
+  occurrence; ➕ always added. So `toggle-done-recurring-weekly-global-filter`
+  (📅 only) gets **no** next occurrence in-app.
+- No ❌ on cancel; no list marker other than `-`; no 🏁 🆔 ⛔ or block links.
 
 Work happens in the user's VaultMate fork on `feat/parity-tests`, cut from
 **upstream** `main` (so the eventual PR is clean).
@@ -47,7 +70,7 @@ Exit criteria:
 - [ ] `test/parity/parity-cases.json` copied from a tagged commit here; source commit recorded (e.g. `test/parity/SOURCE`).
 - [ ] `test/parity/parity_test.dart`: one `test()` per case, named by case id; pins clock via `withClock`; maps operations to VaultMate calls; compares `expected.lines` (primary) and modelled fields (secondary).
 - [ ] `test/parity/expected-divergences.json` implemented with strict semantics (CASE-FORMAT.md §5).
-- [ ] `flutter test test/parity` green, with the #63 case listed as a known divergence.
+- [ ] `flutter test test/parity` green, with every failing case listed as a known divergence (each with its own VaultMate issue).
 - [ ] Refuses unknown `schema_version`.
 
 ## P3: Expand cases ⬜
@@ -70,16 +93,25 @@ Exit criteria:
 
 ## Open questions
 
-1. **Which VaultMate code path is the "toggle" oracle for?** Widget completion,
-   in-app checkbox and edit dialog may use different code. Each needs mapping to
-   one Tasks operation; the widget likely maps to `toggle`.
-2. **Global filter in `tags`.** Tasks excludes the global filter from `tags`.
-   Does VaultMate's model have a tags field that includes it? If so compare
-   `tags` minus the filter, or skip `tags`.
+1. **Which VaultMate code path is the "toggle" oracle for?** Confirmed: three
+   different paths. In-app checkbox/swipe: `InboxTasksCubit.changeTaskStatus` sets
+   ✅, then `TaskManager.setStatus` adds the next occurrence; this is what the
+   Dart test maps `toggle` to. Edit dialog: `TaskEditorCubit.setStatus` changes
+   status only (no ✅, no next occurrence). Widget: Kotlin (`TaskWrapper`), not
+   reachable from Dart tests (betztek/vaultmate#6). Open: test through the cubit,
+   or move the done-date logic into `TaskManager` first (betztek/vaultmate#2).
+2. **Global filter in `tags` and `description`.** Answered for `tags`:
+   VaultMate strips the filter before parsing, so its `tags` excludes it, like
+   Tasks (VaultMate stores tags without `#`). Not comparable as-is:
+   `description`. Tasks' includes the filter and all tags; VaultMate's excludes
+   both. Compare after normalising, or skip `description`.
 3. **Recurrence text normalisation.** Tasks rewrites the rule text via rrule
    (`every week on Monday` style). If VaultMate preserves user text verbatim,
    lines diverge on otherwise-correct behaviour. Decide: divergence, or fix
-   VaultMate to normalise?
+   VaultMate to normalise? VaultMate keeps the text verbatim, and its
+   rule support is narrower than a normalisation issue: `every 2 weeks` throws
+   (it expects `every week 2`), `every month` from Jan 31 overflows into March,
+   `when done` and `every week on Monday` are unsupported.
 4. **Custom statuses.** The user's vault may define custom statuses in Tasks'
    `data.json`. Add a `statuses` setting to the case format when needed (would
    bump `schema_version` only if made required).
@@ -94,5 +126,15 @@ Exit criteria:
 8. **Timezone.** Goldens are generated under `TZ=UTC` at local noon. VaultMate
    runs on device-local time; date-only semantics should make this irrelevant,
    but a case around midnight/DST could confirm.
-9. **Issue #63 details** were taken from the user's brief and not verified here
-   (VaultMate repo not attached to this session).
+9. **Issue #63 details** were taken from the user's brief. VaultMate's widget
+   code since read: it rebuilds the next line from already-parsed fields
+   (filter stripped), drops 📅/🛫 and needs ⏳, consistent with #63. The issue
+   text itself is still unread.
+10. **Settings VaultMate can't express.** Only `globalFilter` maps directly;
+    `recurrenceOnNextLine` matches only at its default (next occurrence above).
+    VaultMate has no option for `removeScheduledDateOnRecurrence`,
+    `setCreatedDate` (always adds ➕), `setDoneDate` (always), `setCancelledDate`
+    (never writes ❌), `removeGlobalFilter`, or `taskFormat` (auto-detects
+    Dataview per line). CASE-FORMAT §5 has no "skipped: unsupported setting"
+    outcome. Decide before cases with non-default values land: list them as
+    divergences (recommended; keeps the gap visible) or add a skip outcome.

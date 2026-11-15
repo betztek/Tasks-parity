@@ -77,12 +77,22 @@ In the VaultMate fork (branch `feat/parity-tests`, see [PLAN.md](docs/PLAN.md) P
   specific commit of this repo (the commit is recorded alongside it).
 - `test/parity/expected-divergences.json`: case ids VaultMate is known to fail,
   each with a reason and issue link.
-- A Dart test that, for each case: pins the clock to `today` (via `package:clock`,
-  which needs the upstream clock PR), applies the settings, runs the equivalent
-  VaultMate operation on `input.lines`, and compares to `expected.lines`
-  (primary) and the parsed fields VaultMate models (secondary). Listed divergences
-  are expected to fail; a listed case that passes fails the suite so the list
-  shrinks as fixes land.
+- A Dart test that, for each case: pins the clock to `today` (via `package:clock`;
+  only `toggle` and `set-status` need it, and that needs the upstream clock PR),
+  applies the settings, runs the equivalent VaultMate operation on `input.lines`,
+  and compares to `expected.lines` (primary) and the parsed fields VaultMate
+  models (secondary). Listed divergences are expected to fail; a listed case that
+  passes fails the suite so the list shrinks as fixes land.
+
+The Dart test covers VaultMate's in-app code path only. The Android home-screen
+widget completes tasks in Kotlin (where #63 lives) and is not exercised.
+
+Tracking issues in the fork: clock
+[betztek/vaultmate#2](https://github.com/betztek/vaultmate/issues/2), consumer test
+[#3](https://github.com/betztek/vaultmate/issues/3) (includes the operation
+mapping), golden sync [#4](https://github.com/betztek/vaultmate/issues/4), fork CI
+[#5](https://github.com/betztek/vaultmate/issues/5), widget coverage
+[#6](https://github.com/betztek/vaultmate/issues/6) (deferred).
 
 ## License
 
